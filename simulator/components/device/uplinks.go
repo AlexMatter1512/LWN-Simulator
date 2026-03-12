@@ -1,11 +1,64 @@
 package device
 
 import (
+	"bytes"
+	"encoding/binary"
+	"math/rand"
+	"time"
+
 	"github.com/arslab/lwnsimulator/simulator/components/device/classes"
 	up "github.com/arslab/lwnsimulator/simulator/components/device/frames/uplink"
 	"github.com/arslab/lwnsimulator/simulator/util"
 	"github.com/brocaar/lorawan"
 )
+
+func (d *Device) generateRandomPayload() lorawan.Payload {
+
+	now := time.Now()
+
+	// Check if we need to generate a new payload
+	if !d.Info.Status.RandomFirstGeneration && d.Info.Status.RandomEvery > 0 {
+		d.Info.Status.RandomUplinkCounter++
+		if d.Info.Status.RandomUplinkCounter < d.Info.Status.RandomEvery {
+			return d.Info.Status.RandomPayloadCache
+		}
+	}
+
+	rand.Seed(now.UnixNano())
+
+	min := d.Info.Configuration.RandomMin
+	max := d.Info.Configuration.RandomMax
+
+	if max < min {
+		max = min
+	}
+
+	val := rand.Intn(max-min+1) + min
+
+	// Force Change logic
+	if d.Info.Configuration.RandomForceChange && max > min {
+		for val == d.Info.Status.LastRandomValue {
+			val = rand.Intn(max-min+1) + min
+		}
+	}
+
+	d.Info.Status.LastRandomValue = val
+	d.Info.Status.RandomUplinkCounter = 0
+	d.Info.Status.RandomFirstGeneration = false
+
+	buf := new(bytes.Buffer)
+
+	// Optimize size: if range fits in 1 byte and is positive, use 1 byte.
+	if min >= 0 && max <= 255 {
+		binary.Write(buf, binary.BigEndian, uint8(val))
+	} else {
+		binary.Write(buf, binary.BigEndian, int16(val))
+	}
+
+	d.Info.Status.RandomPayloadCache = &lorawan.DataPayload{Bytes: buf.Bytes()}
+
+	return d.Info.Status.RandomPayloadCache
+}
 
 func (d *Device) CreateUplink() [][]byte {
 
@@ -51,7 +104,11 @@ func (d *Device) CreateUplink() [][]byte {
 
 		} else {
 			mtype = d.Info.Status.MType
-			payload = d.Info.Status.Payload
+			if d.Info.Configuration.RandomPayload {
+				payload = d.generateRandomPayload()
+			} else {
+				payload = d.Info.Status.Payload
+			}
 		}
 
 		d.Info.Status.LastMType = mtype

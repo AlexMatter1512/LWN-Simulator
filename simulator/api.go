@@ -356,7 +356,7 @@ func (s *Simulator) ChangePayload(pl socket.NewPayload) (string, bool) {
 		Bytes: []byte(pl.Payload),
 	}
 
-	s.Devices[pl.Id].ChangePayload(MType, Payload)
+	s.Devices[pl.Id].ChangePayload(MType, Payload, pl.RandomPayload, pl.RandomMin, pl.RandomMax, pl.RandomEvery, pl.RandomForceChange)
 
 	s.Console.PrintSocket(socket.EventResponseCommand, s.Devices[pl.Id].Info.Name+": Payload changed")
 

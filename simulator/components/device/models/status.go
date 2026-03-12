@@ -39,6 +39,17 @@ type Status struct {
 	LastMType                   lorawan.MType `json:"-"`
 	LastUplinks                 [][]byte      `json:"-"`
 	Base64                      bool          `json:"base64"`
+	RandomPayload               bool          `json:"randomPayload"`
+	RandomMin                   int           `json:"randomMin"`
+	RandomMax                   int           `json:"randomMax"`
+	RandomEvery                 int           `json:"randomEvery"`
+	RandomForceChange           bool          `json:"randomForceChange"`
+
+	//Internal State
+	RandomPayloadCache    lorawan.Payload `json:"-"`
+	RandomUplinkCounter   int             `json:"-"`
+	LastRandomValue       int             `json:"-"`
+	RandomFirstGeneration bool            `json:"-"`
 }
 
 func (s *Status) MarshalJSON() ([]byte, error) {

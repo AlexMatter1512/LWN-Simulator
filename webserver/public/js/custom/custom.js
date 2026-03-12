@@ -613,6 +613,22 @@ $(document).ready(function(){
         Click_SaveDevice();
     });
 
+    $("#checkbox-random-payload").on('change', function() {
+        if($(this).is(":checked")) {
+            $("#div-random-range").show();
+        } else {
+            $("#div-random-range").hide();
+        }
+    });
+
+    $("#checkbox-random-payload-modal").on('change', function() {
+        if($(this).is(":checked")) {
+            $("#div-random-range-modal").show();
+        } else {
+            $("#div-random-range-modal").hide();
+        }
+    });
+
     // ********************** sidebar/dropdown: list gateways *********************
     //click item list
     $("#list-gateways").on("click","tr .clickable",function(){
@@ -967,6 +983,17 @@ $(document).ready(function(){
         var mtype = $("#confirmed-modal").prop("checked") ? ConfirmedData_uplink : UnConfirmedData_uplink;
         var address = $(this).parents("#modal-change-payload").attr("data-addr");
 
+        var randomPayload = $("[name=checkbox-random-payload-modal]").prop("checked");
+        var randomMin = $("[name=input-random-min-modal]").val();
+        var randomMax = $("[name=input-random-max-modal]").val();
+        var randomEvery = $("[name=input-random-every-modal]").val();
+        var randomForceChange = $("[name=checkbox-random-force-change-modal]").prop("checked");
+
+        if(randomPayload && randomForceChange && Number(randomMax) <= Number(randomMin)) {
+            Show_ErrorSweetToast("Error", "Force Change requires a range with at least 2 different values");
+            return;
+        }
+
         var ok = CanExecute();
         if (ok)
             Show_ErrorSweetToast("Unable change payload","Simulator is stopped");
@@ -976,7 +1003,12 @@ $(document).ready(function(){
             var data ={
                 "id": dev.id,
                 "mtype": mtype,
-                "payload": $("#payload-modal").val()
+                "payload": $("#payload-modal").val(),
+                "randomPayload": randomPayload,
+                "randomMin": Number(randomMin),
+                "randomMax": Number(randomMax),
+                "randomEvery": Number(randomEvery),
+                "randomForceChange": randomForceChange
             };
     
             socket.emit("change-payload",data, (devEUI, ok) => {
@@ -986,16 +1018,20 @@ $(document).ready(function(){
 
                     dev.info.status.mtype = data.mtype;
                     dev.info.status.payload = data.payload;
+                    dev.info.status.randomPayload = data.randomPayload;
+                    dev.info.status.randomMin = data.randomMin;
+                    dev.info.status.randomMax = data.randomMax;
+                    dev.info.status.randomEvery = data.randomEvery;
+                    dev.info.status.randomForceChange = data.randomForceChange;
                 }
 
             });
-    
+
         }
 
         $('#modal-change-payload').modal('toggle');
-            
-    });
 
+    });
 });
 
 function Init(){
@@ -1762,8 +1798,29 @@ function RegisterEventsPopup(){
         var address = $(this).parent("#menu-actions").attr("data-addr");
         $('#modal-change-payload').attr("data-addr",address);
 
-        $("#payload-modal").val("")
+        var dev = Devices.get(address);
         
+        if(dev.info.status.mtype == ConfirmedData_uplink){
+            $("#confirmed-modal").prop("checked",true);
+            $("#unconfirmed-modal").prop("checked",false);
+        }else{
+            $("#confirmed-modal").prop("checked",false);
+            $("#unconfirmed-modal").prop("checked",true);
+        }
+
+        $("#payload-modal").val(dev.info.status.payload);
+        
+        $("[name=checkbox-random-payload-modal]").prop("checked", dev.info.status.randomPayload);
+        if(dev.info.status.randomPayload) {
+            $("#div-random-range-modal").show();
+            $("[name=input-random-min-modal]").val(dev.info.status.randomMin);
+            $("[name=input-random-max-modal]").val(dev.info.status.randomMax);
+            $("[name=input-random-every-modal]").val(dev.info.status.randomEvery);
+            $("[name=checkbox-random-force-change-modal]").prop("checked", dev.info.status.randomForceChange);
+        } else {
+            $("#div-random-range-modal").hide();
+        }
+
         MarkersHome.get(address).Marker.closePopup();
 
     });
@@ -2173,6 +2230,13 @@ function CleanInputDevice(){
 
     $("#textarea-payload").val("");
 
+    $("[name=checkbox-random-payload]").prop("checked",false);
+    $("#div-random-range").hide();
+    $("[name=input-random-min]").val("");
+    $("[name=input-random-max]").val("");
+    $("[name=input-random-every]").val("");
+    $("[name=checkbox-random-force-change]").prop("checked",false);
+
     //location
     CleanMap();
 
@@ -2318,6 +2382,17 @@ function LoadDevice(dev){
   
     $("#textarea-payload").val(dev.info.status.payload);
     $("[name=checkbox-base64]").prop("checked", dev.info.status.base64);
+
+    $("[name=checkbox-random-payload]").prop("checked", dev.info.status.randomPayload);
+    if(dev.info.status.randomPayload) {
+        $("#div-random-range").show();
+        $("[name=input-random-min]").val(dev.info.status.randomMin);
+        $("[name=input-random-max]").val(dev.info.status.randomMax);
+        $("[name=input-random-every]").val(dev.info.status.randomEvery);
+        $("[name=checkbox-random-force-change]").prop("checked", dev.info.status.randomForceChange);
+    } else {
+        $("#div-random-range").hide();
+    }
 
     ChangeStateInputDevice(true,dev.info.devEUI);
 
@@ -2529,11 +2604,28 @@ function Click_SaveDevice(){
     var upInterval = $("[name=input-sendInterval]");
     var payload = $("#textarea-payload").val();
     var base64 = $("[name=checkbox-base64]").prop("checked");
+    var randomPayload = $("[name=checkbox-random-payload]").prop("checked");
+    var randomMin = $("[name=input-random-min]");
+    var randomMax = $("[name=input-random-max]");
+    var randomEvery = $("[name=input-random-every]");
+    var randomForceChange = $("[name=checkbox-random-force-change]").prop("checked");
 
     upInterval.val(upInterval.val() == "" ? UplinkIntervalDefault : upInterval.val());
     var validInterval = IsValidNumber(upInterval.val(),-1,Infinity);
 
-    validation = validation && validInterval;
+    var validRandom = true;
+    if(randomPayload) {
+        validRandom = IsValidNumber(randomMin.val(), -32768, 32767) && IsValidNumber(randomMax.val(), -32768, 32767);
+        if(Number(randomMax.val()) < Number(randomMin.val())) {
+            validRandom = false;
+        }
+        if(randomForceChange && Number(randomMax.val()) <= Number(randomMin.val())) {
+            validRandom = false;
+            Show_ErrorSweetToast("Error", "Force Change requires a range with at least 2 different values");
+        }
+    }
+
+    validation = validation && validInterval && validRandom;
     
     if (!validation){
         Show_ErrorSweetToast("Error","Values are incorrect");
@@ -2564,6 +2656,11 @@ function Click_SaveDevice(){
 
         ValidationInput(upInterval,validInterval);
         
+        if(randomPayload) {
+            ValidationInput(randomMin, IsValidNumber(randomMin.val(), -32768, 32767));
+            ValidationInput(randomMax, IsValidNumber(randomMax.val(), -32768, 32767) && (Number(randomMax.val()) >= Number(randomMin.val())));
+        }
+
         return;
     }
 
@@ -2587,6 +2684,11 @@ function Click_SaveDevice(){
             "status":{
                 "active": active,
                 "base64":base64,
+                "randomPayload":randomPayload,
+                "randomMin":Number(randomMin.val()),
+                "randomMax":Number(randomMax.val()),
+                "randomEvery": Number(randomEvery.val()),
+                "randomForceChange": randomForceChange,
                 "infoUplink":{
                     "fport": Number(fport.val()),
                     "fcnt": Number(Fcnt.val()),
@@ -2598,6 +2700,11 @@ function Click_SaveDevice(){
             "configuration":{
                 "region":Number(region.val()),
                 "ackTimeout":Number(ackTimeout.val()),
+                "randomPayload":randomPayload,
+                "randomMin":Number(randomMin.val()),
+                "randomMax":Number(randomMax.val()),
+                "randomEvery": Number(randomEvery.val()),
+                "randomForceChange": randomForceChange,
                 "rx1DROffset":Number(DROffsetRX1.val()),
                 "supportedADR":supportedADR,
                 "supportedOtaa":supportedOtaa,

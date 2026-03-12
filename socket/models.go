@@ -20,9 +20,14 @@ type NewStatusDev struct {
 
 // NewPayload represents a structure for handling payload changes with ID, message type, and payload data.
 type NewPayload struct {
-	Id      int    `json:"id"`      // Id is the unique identifier of the payload.
-	MType   string `json:"mtype"`   // MType is the message type.
-	Payload string `json:"payload"` // Payload is the actual payload data.
+	Id            int    `json:"id"`            // Id is the unique identifier of the payload.
+	MType         string `json:"mtype"`         // MType is the message type.
+	Payload       string `json:"payload"`       // Payload is the actual payload data.
+	RandomPayload     bool   `json:"randomPayload"`     // RandomPayload enables random payload generation.
+	RandomMin         int    `json:"randomMin"`         // RandomMin is the minimum value for random payload.
+	RandomMax         int    `json:"randomMax"`         // RandomMax is the maximum value for random payload.
+	RandomEvery       int    `json:"randomEvery"`       // RandomEvery is the number of uplinks between random payload changes.
+	RandomForceChange bool   `json:"randomForceChange"` // RandomForceChange ensures the next random payload is different.
 }
 
 // NewLocation represents the geographical location of a device.

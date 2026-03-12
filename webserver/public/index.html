@@ -875,6 +875,42 @@
                                                 
                                             </div>
 
+                                            <!--Random Payload-->
+                                            <div class="form-group row align-items-center">
+                                                <div class="col-xl-2">
+                                                </div>
+                                                
+                                                <div class="col-xl-10">
+                                                    <input class="form-check-input text-xl-right" type="checkbox" name="checkbox-random-payload" id="checkbox-random-payload">
+                                                    <label class="form-control-label " for="checkbox-random-payload">
+                                                        Random Payload
+                                                    </label>
+                                                </div>
+                                            </div>
+
+                                            <!--Random Range-->
+                                            <div id="div-random-range" class="form-group row align-items-center" style="display: none;">
+                                                <label class="form-control-label col-xl-2 text-xl-right">Range (Min - Max)</label>
+                                                <div class="col-xl-2">
+                                                    <input type="number" name="input-random-min" class="form-control" placeholder="Min value">
+                                                </div>
+                                                <div class="col-xl-2">
+                                                    <input type="number" name="input-random-max" class="form-control" placeholder="Max value">
+                                                </div>
+
+                                                <label class="form-control-label col-xl-2 text-xl-right">Change every (uplinks)</label>
+                                                <div class="col-xl-2">
+                                                    <input type="number" name="input-random-every" class="form-control" placeholder="1 = every tick">
+                                                </div>
+
+                                                <div class="col-xl-2">
+                                                    <input class="form-check-input" type="checkbox" name="checkbox-random-force-change" id="checkbox-random-force-change">
+                                                    <label class="form-check-label" for="checkbox-random-force-change">
+                                                        Force Change
+                                                    </label>
+                                                </div>
+                                            </div>
+
                                         </div>
                                     </div>
                                 </div>
@@ -1229,6 +1265,42 @@
                         <label class="form-control-label col-md-2 text-md-right">Payload</label>
                         <div class="col-md-10">
                           <textarea id="payload-modal" class="form-control" rows="3"></textarea>
+                        </div>
+                    </div>
+
+                    <!--Random Payload-->
+                    <div class="form-group row align-items-center">
+                        <div class="col-md-2">
+                        </div>
+                        
+                        <div class="col-md-10">
+                            <input class="form-check-input" type="checkbox" name="checkbox-random-payload-modal" id="checkbox-random-payload-modal">
+                            <label class="form-check-label" for="checkbox-random-payload-modal">
+                                Random Payload
+                            </label>
+                        </div>
+                    </div>
+
+                    <!--Random Range-->
+                    <div id="div-random-range-modal" class="form-group row align-items-center" style="display: none;">
+                        <label class="form-control-label col-md-2 text-md-right">Range (Min-Max)</label>
+                        <div class="col-md-2">
+                            <input type="number" name="input-random-min-modal" class="form-control" placeholder="Min">
+                        </div>
+                        <div class="col-md-2">
+                            <input type="number" name="input-random-max-modal" class="form-control" placeholder="Max">
+                        </div>
+
+                        <label class="form-control-label col-md-2 text-md-right">Every (uplinks)</label>
+                        <div class="col-md-2">
+                            <input type="number" name="input-random-every-modal" class="form-control" placeholder="1=tick">
+                        </div>
+
+                        <div class="col-md-2">
+                            <input class="form-check-input" type="checkbox" name="checkbox-random-force-change-modal" id="checkbox-random-force-change-modal">
+                            <label class="form-check-label" for="checkbox-random-force-change-modal">
+                                Force
+                            </label>
                         </div>
                     </div>
                     

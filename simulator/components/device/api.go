@@ -41,6 +41,14 @@ func (d *Device) Setup(Resources *res.Resources, forwarder *f.Forwarder) {
 	d.Info.Status.DataRate = d.Info.Configuration.DataRateInitial
 	d.Info.Status.IndexchannelActive = 0
 
+	d.Info.Status.RandomPayload = d.Info.Configuration.RandomPayload
+	d.Info.Status.RandomMin = d.Info.Configuration.RandomMin
+	d.Info.Status.RandomMax = d.Info.Configuration.RandomMax
+	d.Info.Status.RandomEvery = d.Info.Configuration.RandomEvery
+	d.Info.Status.RandomForceChange = d.Info.Configuration.RandomForceChange
+	d.Info.Status.RandomFirstGeneration = true
+	d.Info.Status.RandomUplinkCounter = 0
+
 	d.Info.Status.Battery = util.ConnectedPowerSource
 
 	d.Info.Status.InfoChannelsUS915.FirstPass = true
@@ -150,10 +158,23 @@ func (d *Device) NewUplink(mtype lorawan.MType, payload string) {
 
 }
 
-func (d *Device) ChangePayload(mtype lorawan.MType, payload lorawan.Payload) {
+func (d *Device) ChangePayload(mtype lorawan.MType, payload lorawan.Payload, randomPayload bool, randomMin, randomMax int, randomEvery int, randomForceChange bool) {
 
 	d.Info.Status.MType = mtype
 	d.Info.Status.Payload = payload
+	d.Info.Status.RandomPayload = randomPayload
+	d.Info.Status.RandomMin = randomMin
+	d.Info.Status.RandomMax = randomMax
+	d.Info.Status.RandomEvery = randomEvery
+	d.Info.Status.RandomForceChange = randomForceChange
+	d.Info.Status.RandomFirstGeneration = true
+	d.Info.Status.RandomUplinkCounter = 0
+
+	d.Info.Configuration.RandomPayload = randomPayload
+	d.Info.Configuration.RandomMin = randomMin
+	d.Info.Configuration.RandomMax = randomMax
+	d.Info.Configuration.RandomEvery = randomEvery
+	d.Info.Configuration.RandomForceChange = randomForceChange
 
 }
 
