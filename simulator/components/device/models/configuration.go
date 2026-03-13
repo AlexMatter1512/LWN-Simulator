@@ -35,12 +35,6 @@ type Configuration struct {
 
 	NbRepConfirmedDataUp   int   `json:"nbRetransmission"` //Nb retrasmission of ConfirmedDataUp
 	NbRepUnconfirmedDataUp uint8 `json:"-"`                // Nb retrasmission of UnconfirmedDataUp
-
-	RandomPayload bool `json:"randomPayload"`
-	RandomMin     int  `json:"randomMin"`
-	RandomMax     int  `json:"randomMax"`
-	RandomEvery       int  `json:"randomEvery"`
-	RandomForceChange bool `json:"randomForceChange"`
 }
 
 func (c *Configuration) MarshalJSON() ([]byte, error) {
@@ -50,14 +44,12 @@ func (c *Configuration) MarshalJSON() ([]byte, error) {
 		Region       int `json:"region"`
 		SendInterval int `json:"sendInterval"`
 		AckTimeout   int `json:"ackTimeout"`
-		RandomEvery  int `json:"randomEvery"`
 
 		*Alias
 	}{
 		Region:       c.Region.GetCode(),
 		SendInterval: int(c.SendInterval / time.Second),
 		AckTimeout:   int(c.AckTimeout / time.Second),
-		RandomEvery:  c.RandomEvery,
 
 		Alias: (*Alias)(c),
 	})
@@ -72,7 +64,6 @@ func (c *Configuration) UnmarshalJSON(data []byte) error {
 		Region       int `json:"region"`
 		SendInterval int `json:"sendInterval"`
 		AckTimeout   int `json:"ackTimeout"`
-		RandomEvery  int `json:"randomEvery"`
 
 		*Alias
 	}{
@@ -86,7 +77,6 @@ func (c *Configuration) UnmarshalJSON(data []byte) error {
 	c.Region = rp.GetRegionalParameters(aux.Region)
 	c.SendInterval = time.Duration(aux.SendInterval) * time.Second
 	c.AckTimeout = time.Duration(aux.AckTimeout) * time.Second
-	c.RandomEvery = aux.RandomEvery
 
 	return nil
 }

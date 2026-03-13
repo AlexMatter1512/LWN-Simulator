@@ -26,8 +26,8 @@ func (d *Device) generateRandomPayload() lorawan.Payload {
 
 	rand.Seed(now.UnixNano())
 
-	min := d.Info.Configuration.RandomMin
-	max := d.Info.Configuration.RandomMax
+	min := d.Info.Status.RandomMin
+	max := d.Info.Status.RandomMax
 
 	if max < min {
 		max = min
@@ -36,7 +36,7 @@ func (d *Device) generateRandomPayload() lorawan.Payload {
 	val := rand.Intn(max-min+1) + min
 
 	// Force Change logic
-	if d.Info.Configuration.RandomForceChange && max > min {
+	if d.Info.Status.RandomForceChange && max > min {
 		for val == d.Info.Status.LastRandomValue {
 			val = rand.Intn(max-min+1) + min
 		}
@@ -104,7 +104,7 @@ func (d *Device) CreateUplink() [][]byte {
 
 		} else {
 			mtype = d.Info.Status.MType
-			if d.Info.Configuration.RandomPayload {
+			if d.Info.Status.RandomPayload {
 				payload = d.generateRandomPayload()
 			} else {
 				payload = d.Info.Status.Payload

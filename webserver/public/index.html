@@ -853,38 +853,14 @@
                                                 
                                             </div>                               
         
-                                            <!--Payload-->
-                                            <div class="form-group row align-items-center">
-                                                <label class="form-control-label col-xl-2 text-xl-right">Payload</label>
-                                                <div class="col-xl-10">
-                                                <textarea id="textarea-payload" class="form-control" name="input-payload" rows="3"></textarea>
-                                                </div>
-                                            </div>
-
-                                            <!--Base64-->
-                                            <div class="form-group row align-items-center">
-                                                <div class="col-xl-2">
-                                                </div>
-                                                
-                                                <div class="col-xl-10">
-                                                    <input class="form-check-input text-xl-right" type="checkbox" name="checkbox-base64">
-                                                    <label class="form-control-label ">
-                                                        Base64 encoded
-                                                    </label>
-                                                </div>
-                                                
-                                            </div>
-
                                             <!--Random Payload-->
                                             <div class="form-group row align-items-center">
-                                                <div class="col-xl-2">
-                                                </div>
+                                                <label class="form-control-label col-xl-2 text-xl-right" for="checkbox-random-payload">
+                                                    Random Payload
+                                                </label>
                                                 
                                                 <div class="col-xl-10">
-                                                    <input class="form-check-input text-xl-right" type="checkbox" name="checkbox-random-payload" id="checkbox-random-payload">
-                                                    <label class="form-control-label " for="checkbox-random-payload">
-                                                        Random Payload
-                                                    </label>
+                                                    <input type="checkbox" name="checkbox-random-payload" id="checkbox-random-payload">
                                                 </div>
                                             </div>
 
@@ -908,6 +884,30 @@
                                                     <label class="form-check-label" for="checkbox-random-force-change">
                                                         Force Change
                                                     </label>
+                                                </div>
+                                            </div>
+
+                                            <!--Payload-->
+                                            <div id="div-normal-payload">
+                                                <div class="form-group row align-items-center">
+                                                    <label class="form-control-label col-xl-2 text-xl-right">Payload</label>
+                                                    <div class="col-xl-10">
+                                                    <textarea id="textarea-payload" class="form-control" name="input-payload" rows="3"></textarea>
+                                                    </div>
+                                                </div>
+
+                                                <!--Base64-->
+                                                <div class="form-group row align-items-center">
+                                                    <div class="col-xl-2">
+                                                    </div>
+                                                    
+                                                    <div class="col-xl-10">
+                                                        <input class="form-check-input text-xl-right" type="checkbox" name="checkbox-base64">
+                                                        <label class="form-control-label ">
+                                                            Base64 encoded
+                                                        </label>
+                                                    </div>
+                                                    
                                                 </div>
                                             </div>
 
@@ -1260,24 +1260,14 @@
                         
                     </div>                               
 
-                    <!--Payload-->
-                    <div class="form-group row align-items-center">
-                        <label class="form-control-label col-md-2 text-md-right">Payload</label>
-                        <div class="col-md-10">
-                          <textarea id="payload-modal" class="form-control" rows="3"></textarea>
-                        </div>
-                    </div>
-
                     <!--Random Payload-->
                     <div class="form-group row align-items-center">
-                        <div class="col-md-2">
-                        </div>
+                        <label class="form-control-label col-md-2 text-md-right" for="checkbox-random-payload-modal">
+                            Random Payload
+                        </label>
                         
                         <div class="col-md-10">
-                            <input class="form-check-input" type="checkbox" name="checkbox-random-payload-modal" id="checkbox-random-payload-modal">
-                            <label class="form-check-label" for="checkbox-random-payload-modal">
-                                Random Payload
-                            </label>
+                            <input type="checkbox" name="checkbox-random-payload-modal" id="checkbox-random-payload-modal">
                         </div>
                     </div>
 
@@ -1301,6 +1291,14 @@
                             <label class="form-check-label" for="checkbox-random-force-change-modal">
                                 Force
                             </label>
+                        </div>
+                    </div>
+
+                    <!--Payload-->
+                    <div id="div-normal-payload-modal" class="form-group row align-items-center">
+                        <label class="form-control-label col-md-2 text-md-right">Payload</label>
+                        <div class="col-md-10">
+                          <textarea id="payload-modal" class="form-control" rows="3"></textarea>
                         </div>
                     </div>
                     

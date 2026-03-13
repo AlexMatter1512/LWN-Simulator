@@ -616,16 +616,20 @@ $(document).ready(function(){
     $("#checkbox-random-payload").on('change', function() {
         if($(this).is(":checked")) {
             $("#div-random-range").show();
+            $("#div-normal-payload").hide();
         } else {
             $("#div-random-range").hide();
+            $("#div-normal-payload").show();
         }
     });
 
     $("#checkbox-random-payload-modal").on('change', function() {
         if($(this).is(":checked")) {
             $("#div-random-range-modal").show();
+            $("#div-normal-payload-modal").hide();
         } else {
             $("#div-random-range-modal").hide();
+            $("#div-normal-payload-modal").show();
         }
     });
 
@@ -1813,12 +1817,14 @@ function RegisterEventsPopup(){
         $("[name=checkbox-random-payload-modal]").prop("checked", dev.info.status.randomPayload);
         if(dev.info.status.randomPayload) {
             $("#div-random-range-modal").show();
+            $("#div-normal-payload-modal").hide();
             $("[name=input-random-min-modal]").val(dev.info.status.randomMin);
             $("[name=input-random-max-modal]").val(dev.info.status.randomMax);
             $("[name=input-random-every-modal]").val(dev.info.status.randomEvery);
             $("[name=checkbox-random-force-change-modal]").prop("checked", dev.info.status.randomForceChange);
         } else {
             $("#div-random-range-modal").hide();
+            $("#div-normal-payload-modal").show();
         }
 
         MarkersHome.get(address).Marker.closePopup();
@@ -2232,6 +2238,7 @@ function CleanInputDevice(){
 
     $("[name=checkbox-random-payload]").prop("checked",false);
     $("#div-random-range").hide();
+    $("#div-normal-payload").show();
     $("[name=input-random-min]").val("");
     $("[name=input-random-max]").val("");
     $("[name=input-random-every]").val("");
@@ -2386,12 +2393,14 @@ function LoadDevice(dev){
     $("[name=checkbox-random-payload]").prop("checked", dev.info.status.randomPayload);
     if(dev.info.status.randomPayload) {
         $("#div-random-range").show();
+        $("#div-normal-payload").hide();
         $("[name=input-random-min]").val(dev.info.status.randomMin);
         $("[name=input-random-max]").val(dev.info.status.randomMax);
         $("[name=input-random-every]").val(dev.info.status.randomEvery);
         $("[name=checkbox-random-force-change]").prop("checked", dev.info.status.randomForceChange);
     } else {
         $("#div-random-range").hide();
+        $("#div-normal-payload").show();
     }
 
     ChangeStateInputDevice(true,dev.info.devEUI);
