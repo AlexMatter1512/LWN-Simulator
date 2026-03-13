@@ -35,6 +35,18 @@ The project consists of three main components: devices, forwarder and gateways.
 * Implements FPending procedure;
 * It is possibile to interact with it in real-time;
 
+#### Random Payload Generation (New Feature)
+
+*This feature is an enhancement over the original simulator, allowing for more realistic and dynamic data simulation.*
+
+The simulator supports dynamic payload generation with configurable randomization:
+* **Configurable Range**: Define minimum and maximum values for the generated payload.
+* **Frequency Control**: Set how often the payload should change (e.g., every uplink or every N uplinks).
+* **Force Change**: Option to ensure the next generated value is always different from the current one.
+* **Format**: Automatically encodes the value in 1 or 2 bytes based on the defined range.
+
+![random_payload](./.github/random_payload.png)
+
 ### The forwarder
 
 It receives the frames from devices, creates a RXPK object including them within and forwards to gateways.
