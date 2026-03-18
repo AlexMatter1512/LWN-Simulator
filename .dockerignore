@@ -1,0 +1,10 @@
+lwnsimulator
+bin
+.git
+.travis.yml
+# Makefile
+README.md
+LICENSE.txt
+.github
+Dockerfile
+.dockerignore
