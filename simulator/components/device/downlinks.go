@@ -17,6 +17,16 @@ func (d *Device) ProcessDownlink(phy lorawan.PHYPayload) (*dl.InformationDownlin
 	mtype := phy.MHDR.MType
 	err = nil
 
+	// During OTAA, only JoinAccept frames are relevant.
+	if d.Info.Status.Mode == util.Activation && mtype != lorawan.JoinAccept {
+		return nil, nil
+	}
+
+	// Ignore stray JoinAccept frames once the device is already joined.
+	if d.Info.Status.Joined && mtype == lorawan.JoinAccept {
+		return nil, nil
+	}
+
 	switch mtype {
 
 	case lorawan.JoinAccept:
@@ -28,6 +38,10 @@ func (d *Device) ProcessDownlink(phy lorawan.PHYPayload) (*dl.InformationDownlin
 		return d.ProcessJoinAccept(Ja)
 
 	case lorawan.UnconfirmedDataDown:
+		macPL, ok := phy.MACPayload.(*lorawan.MACPayload)
+		if !ok || macPL.FHDR.DevAddr != d.Info.DevAddr {
+			return nil, nil
+		}
 
 		payload, err = dl.GetDownlink(phy, d.Info.Configuration.DisableFCntDown, d.Info.Status.FCntDown,
 			d.Info.NwkSKey, d.Info.AppSKey)
@@ -36,6 +50,10 @@ func (d *Device) ProcessDownlink(phy lorawan.PHYPayload) (*dl.InformationDownlin
 		}
 
 	case lorawan.ConfirmedDataDown: //ack
+		macPL, ok := phy.MACPayload.(*lorawan.MACPayload)
+		if !ok || macPL.FHDR.DevAddr != d.Info.DevAddr {
+			return nil, nil
+		}
 
 		payload, err = dl.GetDownlink(phy, d.Info.Configuration.DisableFCntDown, d.Info.Status.FCntDown,
 			d.Info.NwkSKey, d.Info.AppSKey)

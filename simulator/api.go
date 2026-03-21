@@ -7,6 +7,7 @@ import (
 	"github.com/arslab/lwnsimulator/shared"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/brocaar/lorawan"
 
@@ -53,11 +54,22 @@ func (s *Simulator) Run() {
 	s.setup()
 	s.Print("START", nil, util.PrintBoth)
 	shared.DebugPrint("Turning ON active components")
+	const otaaStartupGap = 7 * time.Second
+	const defaultStartupGap = 250 * time.Millisecond
 	for _, id := range s.ActiveGateways {
 		s.turnONGateway(id)
 	}
 	for _, id := range s.ActiveDevices {
 		s.turnONDevice(id)
+
+		gap := defaultStartupGap
+		if s.Devices[id].Info.Configuration.SupportedOtaa {
+			// OTAA join RX windows overlap for several seconds; a wider gap avoids
+			// devices consuming unrelated join-accept frames on the same channel.
+			gap = otaaStartupGap
+		}
+
+		time.Sleep(gap)
 	}
 }
 

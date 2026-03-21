@@ -61,6 +61,12 @@ func (d *Device) OtaaActivation() {
 
 		d.Print("Unjoined", nil, util.PrintBoth)
 
+		// Backoff before retrying join to avoid synchronized rejoin storms.
+		retryDelay := 2*time.Second + time.Duration(rand.Intn(1500))*time.Millisecond
+		timerRetry := time.NewTimer(retryDelay)
+		<-timerRetry.C
+		timerRetry.Stop()
+
 	}
 
 	return
