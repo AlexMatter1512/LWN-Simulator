@@ -7,10 +7,10 @@ import (
 )
 
 type ReceivedDownlink struct {
-	Mutex    sync.Mutex
-	Downlink *lorawan.PHYPayload
-	Notify   *sync.Cond
-	IsOpen   bool
+	Mutex   sync.Mutex
+	Queue   []*lorawan.PHYPayload
+	Notify  *sync.Cond
+	IsOpen  bool
 }
 
 func (b *ReceivedDownlink) Push(data *lorawan.PHYPayload) {
@@ -21,8 +21,7 @@ func (b *ReceivedDownlink) Push(data *lorawan.PHYPayload) {
 
 	b.Mutex.Lock()
 	if b.IsOpen {
-
-		b.Downlink = data
+		b.Queue = append(b.Queue, data)
 		b.Notify.Broadcast()
 
 	}
@@ -37,16 +36,33 @@ func (b *ReceivedDownlink) Pull() *lorawan.PHYPayload {
 
 	defer b.Mutex.Unlock()
 
-	if b.Downlink == nil {
+	if len(b.Queue) == 0 {
 		b.Notify.Wait()
 	}
 
-	phy := b.Downlink
+	if len(b.Queue) == 0 {
+		return nil
+	}
 
-	b.Downlink = nil //reset
+	phy := b.Queue[0]
+	b.Queue = b.Queue[1:]
 
 	return phy
 
+}
+
+func (b *ReceivedDownlink) TryPull() *lorawan.PHYPayload {
+	b.Mutex.Lock()
+	defer b.Mutex.Unlock()
+
+	if len(b.Queue) == 0 {
+		return nil
+	}
+
+	phy := b.Queue[0]
+	b.Queue = b.Queue[1:]
+
+	return phy
 }
 
 func (b *ReceivedDownlink) Wait() {
@@ -70,5 +86,6 @@ func (b *ReceivedDownlink) Open() {
 func (b *ReceivedDownlink) Close() {
 	b.Mutex.Lock()
 	b.IsOpen = false
+	b.Queue = nil
 	b.Mutex.Unlock()
 }

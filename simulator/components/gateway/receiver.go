@@ -3,7 +3,6 @@ package gateway
 import (
 	"errors"
 	"fmt"
-	"time"
 
 	pkt "github.com/arslab/lwnsimulator/simulator/resources/communication/packets"
 	"github.com/arslab/lwnsimulator/simulator/resources/communication/udp"
@@ -91,8 +90,6 @@ func (g *Gateway) Receiver() {
 			continue
 		}
 
-		time.Sleep(time.Second) //sync le print
-
 		msg := fmt.Sprintf("%v received", pkt.PacketToString(receivedPack[3]))
 		g.Print(msg, nil, util.PrintBoth)
 
@@ -105,7 +102,6 @@ func (g *Gateway) Receiver() {
 
 		case pkt.TypePullAck:
 			pullAckCounter.Inc()
-			break
 
 		case pkt.TypePullResp:
 

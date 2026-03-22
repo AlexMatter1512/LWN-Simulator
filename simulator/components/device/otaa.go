@@ -1,7 +1,11 @@
 package device
 
 import (
+	crand "crypto/rand"
+	"encoding/binary"
 	"math/rand"
+	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/arslab/lwnsimulator/simulator/util"
@@ -17,7 +21,39 @@ const (
 	JOINACCEPTDELAY2 = time.Duration(6 * time.Second)
 )
 
+var (
+	devNonceInitOnce sync.Once
+	devNonceCounter  uint32
+)
+
+func nextGlobalDevNonce() lorawan.DevNonce {
+	devNonceInitOnce.Do(func() {
+		var seedBytes [2]byte
+		if _, err := crand.Read(seedBytes[:]); err == nil {
+			seed := binary.BigEndian.Uint16(seedBytes[:])
+			if seed == 0 {
+				seed = 1
+			}
+			// Keep the first generated value equal to seed.
+			atomic.StoreUint32(&devNonceCounter, uint32(seed-1))
+			return
+		}
+
+		// Fallback if OS random is unavailable.
+		atomic.StoreUint32(&devNonceCounter, 0)
+	})
+
+	for {
+		next := atomic.AddUint32(&devNonceCounter, 1)
+		nonce := uint16(next & 0xFFFF)
+		if nonce != 0 {
+			return lorawan.DevNonce(nonce)
+		}
+	}
+}
+
 func (d *Device) OtaaActivation() {
+	consecutiveFailures := 0
 
 	for !d.Info.Status.Joined {
 
@@ -31,54 +67,96 @@ func (d *Device) OtaaActivation() {
 
 		d.SendJoinRequest()
 
-		d.Print("Open RXs", nil, util.PrintBoth)
-
-		phy := d.Class.ReceiveWindows(JOINACCEPTDELAY1, JOINACCEPTDELAY2)
-		if phy != nil {
-
-			d.Print("Downlink received", nil, util.PrintBoth)
-
-			_, err := d.ProcessDownlink(*phy)
-			if err != nil {
-				d.Print("", err, util.PrintBoth)
-
-				timerAckTimeout := time.NewTimer(d.Info.Configuration.AckTimeout)
-				<-timerAckTimeout.C
-
-				d.Print("ACK Timeout", nil, util.PrintBoth)
-			}
-		} else {
+		joinedInWindows, sawAnyDownlink := d.receiveJoinAcceptWindows()
+		if !sawAnyDownlink {
 			d.Print("None downlink received", nil, util.PrintBoth)
 		}
-
-		if d.Info.Status.Joined {
-
+		if joinedInWindows {
 			d.Print("Joined", nil, util.PrintBoth)
 			d.Info.Status.Mode = util.Normal
-
 			return
 		}
 
 		d.Print("Unjoined", nil, util.PrintBoth)
+		consecutiveFailures++
 
-		// Backoff before retrying join to avoid synchronized rejoin storms.
-		retryDelay := 2*time.Second + time.Duration(rand.Intn(1500))*time.Millisecond
+		// Backoff before retrying join to avoid synchronized rejoin storms under
+		// high-concurrency activation conditions.
+		retryBase := 2 * time.Second
+		if consecutiveFailures > 1 {
+			step := consecutiveFailures - 1
+			if step > 3 {
+				step = 3
+			}
+			retryBase = retryBase << step // 2s, 4s, 8s, 16s (capped)
+		}
+		retryDelay := retryBase + time.Duration(rand.Intn(1500))*time.Millisecond
 		timerRetry := time.NewTimer(retryDelay)
 		<-timerRetry.C
 		timerRetry.Stop()
 
 	}
 
-	return
+}
+
+func (d *Device) receiveJoinAcceptWindows() (bool, bool) {
+	d.Print("Open RXs", nil, util.PrintBoth)
+
+	type windowCfg struct {
+		idx   int
+		delay time.Duration
+	}
+
+	windows := []windowCfg{
+		{idx: 0, delay: JOINACCEPTDELAY1},
+		{idx: 1, delay: JOINACCEPTDELAY2},
+	}
+
+	sawAnyDownlink := false
+
+	for _, w := range windows {
+		rx := &d.Info.RX[w.idx]
+		freq := rx.GetListeningFrequency()
+
+		d.Info.Forwarder.Register(freq, d.Info.DevEUI, &d.Info.ReceivedDownlink)
+
+		timerDelay := time.NewTimer(w.delay)
+		<-timerDelay.C
+		timerDelay.Stop()
+
+		deadline := time.Now().Add(rx.DurationOpen)
+		for time.Now().Before(deadline) {
+			phy := d.Info.ReceivedDownlink.TryPull()
+			if phy == nil {
+				time.Sleep(10 * time.Millisecond)
+				continue
+			}
+
+			sawAnyDownlink = true
+			d.Print("Downlink received", nil, util.PrintBoth)
+
+			_, err := d.ProcessDownlink(*phy)
+			if err != nil {
+				d.Print("", err, util.PrintBoth)
+				continue
+			}
+
+			if d.Info.Status.Joined {
+				d.Info.Forwarder.UnRegister(freq, d.Info.DevEUI)
+				return true, sawAnyDownlink
+			}
+		}
+
+		d.Info.Forwarder.UnRegister(freq, d.Info.DevEUI)
+	}
+
+	return false, sawAnyDownlink
 }
 
 func (d *Device) CreateJoinRequest() []byte {
-
-	rand.Seed(time.Now().UTC().UnixNano())
-	random := uint16(rand.Int())
-
-	DevNonce := lorawan.DevNonce(random)
-	d.Info.DevNonce = DevNonce
+	// Allocate a fresh DevNonce from a process-wide sequence so concurrent OTAA
+	// attempts do not reuse the same DevNonce across devices.
+	d.Info.DevNonce = nextGlobalDevNonce()
 
 	phy := lorawan.PHYPayload{
 		MHDR: lorawan.MHDR{
