@@ -7,10 +7,10 @@ import (
 )
 
 type ReceivedDownlink struct {
-	Mutex   sync.Mutex
-	Queue   []*lorawan.PHYPayload
-	Notify  *sync.Cond
-	IsOpen  bool
+	Mutex  sync.Mutex
+	Queue  []*lorawan.PHYPayload
+	Notify *sync.Cond
+	IsOpen bool
 }
 
 func (b *ReceivedDownlink) Push(data *lorawan.PHYPayload) {
